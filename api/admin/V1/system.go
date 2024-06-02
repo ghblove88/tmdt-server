@@ -1,8 +1,8 @@
 package V1
 
 import (
-	"EcdsServer/common"
-	"EcdsServer/models"
+	"TmdtServer/common"
+	"TmdtServer/models"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/shirou/gopsutil/v3/cpu"

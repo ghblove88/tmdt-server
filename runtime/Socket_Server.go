@@ -1,10 +1,7 @@
-//go:build 老崔定制读卡器
-// +build 老崔定制读卡器
-
 package runtime
 
 import (
-	"EcdsServer/common"
+	"TmdtServer/common"
 	"bytes"
 	"container/list"
 	"encoding/binary"
@@ -58,12 +55,12 @@ type Socket_Reader struct {
 
 func (sr *Socket_Reader) Run() {
 	sr.Readid_queue = STRUCT_READERID_QUEUE{make(chan int, 1), list.List{}}
-	go sr.Socket_start()
+	go sr.SocketStart()
 }
 
-func (sr *Socket_Reader) Socket_start() {
-	service := common.Config.GetString("reader::port")
-	tcpAddr, err := net.ResolveTCPAddr("tcp4", ":"+service)
+func (sr *Socket_Reader) SocketStart() {
+	service := common.Config.GetString("socket_server.address") + ":" + common.Config.GetString("socket_server.port")
+	tcpAddr, err := net.ResolveTCPAddr("tcp4", service)
 	if err != nil {
 		zap.S().Errorln("Fatal error: %s", zap.Error(err))
 		os.Exit(1)
@@ -74,7 +71,7 @@ func (sr *Socket_Reader) Socket_start() {
 		os.Exit(1)
 	}
 
-	zap.S().Infoln("Socket_Reader Running......" + tcpAddr.String())
+	zap.S().Infoln("Socket_Reader Running:", tcpAddr)
 	for {
 		conn, err := listener.AcceptTCP()
 		if err != nil {

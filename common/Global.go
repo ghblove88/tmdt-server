@@ -1,16 +1,14 @@
 package common
 
 import (
-	"EcdsServer/models"
+	"TmdtServer/models"
 	"fmt"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
 
 var (
-	TestMode  *bool    //测试模式
-	GDbsname  []string //记录系统中 洗消数据库 别名
-	GDbserver string   //记录服务数据的数据库
+	TestMode *bool //测试模式
 
 	Config          *viper.Viper //全局配置变量；
 	MsgQueueInfo    StringQueue  //短信队列
@@ -33,10 +31,10 @@ func init() {
 
 	Config = viper.GetViper()
 	models.GDRSDns = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8&parseTime=True&loc=Local",
-		Config.GetString("ecds_server.username"),
-		Config.GetString("ecds_server.password"), Config.GetString("ecds_server.address"),
-		Config.GetInt32("ecds_server.port"), Config.GetString("ecds_server.name"))
-	zap.S().Infoln("主数据库地址:", "dns:", models.GDRSDns)
+		Config.GetString("DbServer.username"),
+		Config.GetString("DbServer.password"), Config.GetString("DbServer.address"),
+		Config.GetInt32("DbServer.port"), Config.GetString("DbServer.name"))
+	//zap.S().Infoln("主数据库地址:", "dns:", models.GDRSDns)
 
 	MsgQueueInfo = *NewStringQueue(50)
 	MsgQueueWarning = *NewStringQueue(50)

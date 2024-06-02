@@ -1,4 +1,4 @@
-module EcdsServer
+module TmdtServer
 
 go 1.20
 

@@ -1,7 +1,7 @@
 package runtime
 
 import (
-	models "EcdsServer/models"
+	models "TmdtServer/models"
 )
 
 type Device_Info struct {

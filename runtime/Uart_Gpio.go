@@ -1,7 +1,7 @@
 package runtime
 
 import (
-	"EcdsServer/common"
+	"TmdtServer/common"
 	"github.com/jacobsa/go-serial/serial"
 	"go.uber.org/zap"
 	"io"

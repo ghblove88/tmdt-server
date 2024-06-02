@@ -1,10 +1,10 @@
 package api
 
 import (
-	adminDataV1 "EcdsServer/api/admin/V1"
-	apiDataV1 "EcdsServer/api/apiData/V1"
-	monitorV1 "EcdsServer/api/monitor/V1"
-	"EcdsServer/common"
+	adminDataV1 "TmdtServer/api/admin/V1"
+	apiDataV1 "TmdtServer/api/apiData/V1"
+	monitorV1 "TmdtServer/api/monitor/V1"
+	"TmdtServer/common"
 	"fmt"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
@@ -59,24 +59,10 @@ func Router() {
 
 	apiDataV1Group := r.Group("/data/v1")
 	{
-		apiDataV1Group.POST("/SwipeCard", func(c *gin.Context) { apiDataV1.SwipeCard(c) })
 
 		apiDataV1Group.GET("/operator", func(c *gin.Context) { apiDataV1.GetOperator(c) })
 		apiDataV1Group.GET("/doctor", func(c *gin.Context) { apiDataV1.GetDoctor(c) })
 		apiDataV1Group.GET("/device", func(c *gin.Context) { apiDataV1.GetDevice(c) })
-		apiDataV1Group.GET("/program", func(c *gin.Context) { apiDataV1.GetProgram(c) })
-		apiDataV1Group.GET("/timePlan", func(c *gin.Context) { apiDataV1.GetTimePlan(c) })
-		apiDataV1Group.GET("/lastEndoscopeDisinfectionRecord/:number", func(c *gin.Context) { apiDataV1.GetLastRecordByEid(c) })
-		apiDataV1Group.GET("/lastEndoscopeDisinfectionRecord1/:number", func(c *gin.Context) { apiDataV1.GetLastRecordByEidSlic(c) })
-		apiDataV1Group.GET("/lastEndoscopeDisinfectionRecord2/:number", func(c *gin.Context) { apiDataV1.GetLastRecordByEid_AntListener(c) })
-		apiDataV1Group.GET("/lastEndoscopeDisinfectionRecord3/:number", func(c *gin.Context) { apiDataV1.GetLastRecordByEidUsed(c) })
-		apiDataV1Group.GET("/recordByBo/:number", func(c *gin.Context) { apiDataV1.GetRecordByNo(c) })
-		apiDataV1Group.GET("/recordsById/:number", func(c *gin.Context) { apiDataV1.GetRecordsById(c) })
-
-		apiDataV1Group.POST("/writeBack1", func(c *gin.Context) { apiDataV1.WriteBack1(c) })
-		apiDataV1Group.POST("/writeBack2", func(c *gin.Context) { apiDataV1.WriteBack2(c) })
-		apiDataV1Group.POST("/writeBack2a", func(c *gin.Context) { apiDataV1.WriteBack2_AntListener(c) })
-		apiDataV1Group.POST("/endoscopyWriteBack", func(c *gin.Context) { apiDataV1.EndoscopyWriteBack(c) })
 
 	}
 
@@ -191,8 +177,7 @@ func Router() {
 	{
 		apiRunV1Group.POST("/get", func(c *gin.Context) { monitorV1.Get(c) })
 		apiRunV1Group.GET("/GetGeneralInformation", func(c *gin.Context) { monitorV1.GetGeneralInformation(c) })
-		apiRunV1Group.POST("/antModify", func(c *gin.Context) { monitorV1.AntModify(c) })
-		apiRunV1Group.POST("/getLeakPart", func(c *gin.Context) { monitorV1.GetLeakPart(c) })
+
 	}
 
 	err = r.Run(fmt.Sprintf("%s:%d", viper.GetString("web_server.address"), viper.GetInt("web_server.port")))

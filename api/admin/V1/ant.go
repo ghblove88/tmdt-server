@@ -1,8 +1,8 @@
 package V1
 
 import (
-	"EcdsServer/common"
-	"EcdsServer/models"
+	"TmdtServer/common"
+	"TmdtServer/models"
 	"github.com/gin-gonic/gin"
 	"github.com/xuri/excelize/v2"
 	"net/http"

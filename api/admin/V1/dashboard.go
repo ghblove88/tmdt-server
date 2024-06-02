@@ -1,7 +1,7 @@
 package V1
 
 import (
-	"EcdsServer/models"
+	"TmdtServer/models"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"

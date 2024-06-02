@@ -1,9 +1,9 @@
-ecds_server:
+DbServer:
     address: ecds.doneax.com
     port: 3306
     username: root
     password: AntMysql2015
-    name: ecds
+    name: tmdt
 socket_server:
     address: 0.0.0.0
     port: 8866
@@ -14,74 +14,7 @@ equipment:
     identity: ANT
     #标识必须使用字母
     #在同一系统多台洗消主机时,标识必须长度一致 ANTA,ANTB,ANTC
-reader:
-    port: 8899
-    #types 标注系统中包含读卡头所有功能类型  括号中 是对应的播报语音文件名
-    types: "测漏(celou),初洗(chuxi),清洗(qingxi),漂洗(piaoxi),消毒(xiaodu),末洗(moxi),酒精(jiujing),干燥(ganzao),超声波(chaoshengbo),
-    结束(jieshu),送达(songda),存镜(cunjing),取镜(qujing),预处理(yuchuli)"
-    #下面是系统中各功能对应的IP地址，每个类型数量不限 地址不限。在 20~250之间随意设置
-    #但不能冲突
-    初洗: 20,21,22,23,24,25,26,27,28,29
-    清洗: 30,31,32,33,34,45,56,37,38,39
-    漂洗: 40,41,42,43,44,45,46.47.48.49
-    消毒: 50,51,52,53,54,55,56,57,58,59
-    末洗: 60,61,62,63,64,65,66,67,68,69
-    酒精: 70,71,72,73,74,75,76,77,78,79
-    干燥: 80,81,82,83,84,85,86,87,88,89
-    超声波: 90,91,92,93,94,95,96,97,98,99
-    测漏: 100,101,102,103,104,105,106,107,108,109
-    #洗镜机与其他类型不同
-    #洗镜机=100,101,102 表示：洗镜机一 地址为 100；洗镜机二 地址为 101；洗镜机三 地址为 102 以此类推
-    洗镜机: 110,111,112,113,114,115,116,117,118,119
-    送达: 130,131,132,133,134,136,136,137,138,139
-    结束: 140,141,142,143,144,145,146,147,148,149,150
-    存镜: 150
-    取镜: 151
-    预处理: 180
-mysql_databases:
-  - name: db1
-    address: localhost
-    port: 3306
-    username: db1_user
-    password: db1_password
-  - name: db2
-    address: localhost
-    port: 3306
-    username: db2_user
-    password: db2_password
-  - name: db3
-    address: localhost
-    port: 3306
-    username: db3_user
-    password: db3_password
-# 可以继续添加其他数据库配置
-ecds:
-    #自由规则模式
-    freerule: false
-    detectionimages: /Users/gao/Develop/ECDS/images
-    #是否处理洗净机的晨洗
-    isfirstsoakofday: true
-    #取数据是否包含正在进行中的洗消记录
-    includeprocessing: false
-    #标准洗消步骤 如果为空 就限制步骤
-    standardstep: 测漏,清洗,漂洗,消毒,末洗,干燥,结束
-    #干燥 指定 分钟到时后自动结束
-    dryingautoend: false
-    #干燥 设置时长 单位 秒
-    dryingtimelimit: 120
-    #末洗 指定 分钟到时后自动结束
-    autoend: false
-    #末洗 设置时长 单位 秒
-    unwashedtimelimit: 120
-    #漂洗 限定时长 单位 秒
-    rinsetimelimit: 60
-    #洗镜子机 预设时间到时后自动结束
-    ecmautoend: true
-    #在洗消监控界面，显示洗消中内镜上一次使用患者名字
-    showlastpatient: true
-    #使用后记录模式，先记录工作站检查病人信息，再清洗镜子是绑定清洗信息
-    recordafterendoscopy: false
-    #预处理记录
-    addfixedsteps: true
+
+tmdt:
     #通讯串口
     uart1: com1

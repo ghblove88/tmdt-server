@@ -1,7 +1,7 @@
 package runtime
 
 import (
-	"EcdsServer/models"
+	"TmdtServer/models"
 )
 
 type STRUCT_OPERATOR_INFO struct {
