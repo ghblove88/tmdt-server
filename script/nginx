@@ -1,0 +1,72 @@
+
+
+# Default server configuration
+#
+# 全局设置，影响所有服务器
+    client_max_body_size 100M;  # 允许上传的最大文件大小为100MB
+    # 客户端超时设置
+    client_body_timeout 120s;  # 请求体到达超时
+    client_header_timeout 60s;  # 请求头完成超时
+    send_timeout 120s;         # 发送响应超时
+
+server {
+	listen 80 default_server;
+	listen [::]:80 default_server;
+
+	location /admin/v1 {
+        proxy_pass http://127.0.0.1:8849;  # 转发到后端服务
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+	location /run/v1 {
+        proxy_pass http://127.0.0.1:8849;  # 转发到后端服务
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+   location /images {
+        proxy_pass http://127.0.0.1:8849;  # 转发到后端服务
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    location /bgStatic {
+        proxy_pass http://127.0.0.1:8849;  # 转发到后端服务
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+	root /var/www/html;
+
+	# Add index.php to the list if you are using PHP
+	index index.html index.htm index.nginx-debian.html;
+
+	server_name _;
+
+	location / {
+		# First attempt to serve request as file, then
+		# as directory, then fall back to displaying a 404.
+		try_files $uri $uri/ =404;
+	}
+
+}
+
+

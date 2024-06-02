@@ -1,0 +1,10 @@
+kind: reverse
+name: cleardb
+source:
+  database: mysql
+  conn_str: 'root:AntMysql2015@tcp(ant.it08.cn:3306)/clear?charset=utf8'
+targets:
+  - type: codes
+    language: golang
+    multiple_files: false # 是否生成多个文件
+    output_dir: ../models

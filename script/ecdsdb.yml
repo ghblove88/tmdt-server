@@ -1,0 +1,11 @@
+kind: reverse
+name: ecdsdb
+source:
+  database: mysql
+  conn_str: 'root:AntMysql2015@tcp(139.9.139.179:3306)/antcc?charset=utf8'
+targets:
+  - type: codes
+    table_prefix: 'Db'
+    multiple_files: false # 是否生成多个文件
+    language: golang
+    output_dir: ../models
