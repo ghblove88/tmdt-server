@@ -11,7 +11,7 @@ var (
 	G_Doctor_Info   Doctor_Info
 	G_Device_Info   Device_Info
 	G_Sound_Play    Sound_Play
-	G_Socket_Reader Socket_Reader
+	G_Socket_Reader SocketReader
 	G_UartGpio      UartGpio
 
 	G_Operator_Current string // 记录当前操作员
@@ -47,8 +47,8 @@ func (k *Runtime) Init() {
 	G_Sound_Play = Sound_Play{}
 	G_Sound_Play.Run()
 
-	G_Socket_Reader = Socket_Reader{}
-	G_Socket_Reader.Run()
+	G_Socket_Reader = SocketReader{}
+	G_Socket_Reader.SocketStart()
 
 	G_UartGpio.Run()
 }
