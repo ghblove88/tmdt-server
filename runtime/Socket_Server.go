@@ -132,7 +132,7 @@ func (p *ResponsePacket) ToBytes() []byte {
 type SocketServer struct {
 	listener  net.Listener
 	dataMutex sync.Mutex
-	dataMap   map[uint32]DeviceData
+	DataMap   map[uint32]DeviceData
 	lastSeen  map[uint32]time.Time
 }
 
@@ -145,7 +145,7 @@ func NewServer() (*SocketServer, error) {
 
 	server := &SocketServer{
 		listener: listener,
-		dataMap:  make(map[uint32]DeviceData),
+		DataMap:  make(map[uint32]DeviceData),
 		lastSeen: make(map[uint32]time.Time),
 	}
 
@@ -206,10 +206,10 @@ func (s *SocketServer) updateDataMap(data DeviceData) {
 	s.dataMutex.Lock()
 	defer s.dataMutex.Unlock()
 
-	s.dataMap[data.DeviceID] = data
+	s.DataMap[data.DeviceID] = data
 	s.lastSeen[data.DeviceID] = time.Now()
 	if *common.TestMode {
-		fmt.Printf("Updated data map: %v\n", s.dataMap)
+		fmt.Printf("Updated data map: %v\n", s.DataMap)
 	}
 }
 func (s *SocketServer) cleanupExpiredData() {
@@ -219,7 +219,7 @@ func (s *SocketServer) cleanupExpiredData() {
 		now := time.Now()
 		for deviceID, lastSeen := range s.lastSeen {
 			if now.Sub(lastSeen) > 1*time.Minute {
-				delete(s.dataMap, deviceID)
+				delete(s.DataMap, deviceID)
 				delete(s.lastSeen, deviceID)
 				fmt.Printf("Removed device %d due to inactivity\n", deviceID)
 			}

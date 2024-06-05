@@ -1,10 +1,11 @@
 package runtime
 
 import (
+	"TmdtServer/common"
 	"TmdtServer/models"
-	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"go.uber.org/zap"
+	"time"
 )
 
 var (
@@ -13,8 +14,9 @@ var (
 	G_Device_Info   Device_Info
 	G_Sound_Play    Sound_Play
 	G_UartGpio      UartGpio
+	G_SocketServer  *SocketServer
 
-	G_Operator_Current string // 记录当前操作员
+	RecordTimer *common.TimerTask // 定时器 := NewTimer()
 )
 
 type Runtime struct {
@@ -24,7 +26,8 @@ func (k *Runtime) Run() {
 
 	k.Init()
 
-	//go k.Process()
+	//启动实时运行器
+	RecordTimer.Start(10*time.Second, 1*time.Minute, k.RecordTemp)
 
 }
 
@@ -47,12 +50,8 @@ func (k *Runtime) Init() {
 	G_Sound_Play = Sound_Play{}
 	G_Sound_Play.Run()
 
-	socket_server, err := NewServer()
-	if err != nil {
-		fmt.Println("Error starting server:", err.Error())
-		return
-	}
-	socket_server.Start()
+	G_SocketServer, _ = NewServer()
+	G_SocketServer.Start()
 
 	G_UartGpio.Run()
 }
@@ -72,4 +71,8 @@ func (k *Runtime) PlayStepVoice(nVoice_NO string, nStepName_voice []string, Oper
 	voice = append(voice, Operating)
 
 	G_Sound_Play.Add_Sound_Queue(voice)
+}
+
+func (k *Runtime) RecordTemp() {
+
 }
