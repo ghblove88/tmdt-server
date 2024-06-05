@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"TmdtServer/models"
+	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"go.uber.org/zap"
 )
@@ -11,7 +12,6 @@ var (
 	G_Doctor_Info   Doctor_Info
 	G_Device_Info   Device_Info
 	G_Sound_Play    Sound_Play
-	G_Socket_Reader SocketReader
 	G_UartGpio      UartGpio
 
 	G_Operator_Current string // 记录当前操作员
@@ -47,8 +47,12 @@ func (k *Runtime) Init() {
 	G_Sound_Play = Sound_Play{}
 	G_Sound_Play.Run()
 
-	G_Socket_Reader = SocketReader{}
-	G_Socket_Reader.SocketStart()
+	socket_server, err := NewServer()
+	if err != nil {
+		fmt.Println("Error starting server:", err.Error())
+		return
+	}
+	socket_server.Start()
 
 	G_UartGpio.Run()
 }

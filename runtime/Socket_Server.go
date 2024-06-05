@@ -6,14 +6,13 @@ import (
 	"fmt"
 	"go.uber.org/zap"
 	"io"
-	"log"
 	"net"
-	"os"
+	"sync"
 	"time"
 )
 
-// SocketReader the structure of the received data packet
-type SocketReader struct {
+// DataPacket represents the structure of the received data packet
+type DataPacket struct {
 	Header1   byte
 	Header2   byte
 	Command   byte
@@ -36,11 +35,11 @@ type DeviceData struct {
 }
 
 // NewDataPacket creates a new DataPacket from a byte slice
-func NewDataPacket(buf []byte) (*SocketReader, error) {
+func NewDataPacket(buf []byte) (*DataPacket, error) {
 	if len(buf) != 14 {
 		return nil, fmt.Errorf("invalid buffer size")
 	}
-	return &SocketReader{
+	return &DataPacket{
 		Header1:   buf[0],
 		Header2:   buf[1],
 		Command:   buf[2],
@@ -56,7 +55,7 @@ func NewDataPacket(buf []byte) (*SocketReader, error) {
 }
 
 // Validate checks the checksum of the data packet
-func (p *SocketReader) Validate() bool {
+func (p *DataPacket) Validate() bool {
 	sum := p.Header1 + p.Header2 + p.Command +
 		p.DeviceID[0] + p.DeviceID[1] + p.DeviceID[2] + p.DeviceID[3] +
 		p.Temp1High + p.Temp1Low +
@@ -67,7 +66,7 @@ func (p *SocketReader) Validate() bool {
 }
 
 // ToDeviceData converts a DataPacket to a DeviceData structure
-func (p *SocketReader) ToDeviceData() DeviceData {
+func (p *DataPacket) ToDeviceData() DeviceData {
 	deviceID := binary.BigEndian.Uint32(p.DeviceID[:])
 	temp1 := float32(int(p.Temp1High)<<8|int(p.Temp1Low)) / 10.0
 	temp2 := float32(int(p.Temp2High)<<8|int(p.Temp2Low)) / 10.0
@@ -129,12 +128,48 @@ func (p *ResponsePacket) ToBytes() []byte {
 	return buf
 }
 
-// handleRequest handles incoming requests in a long connection mode.
-func handleRequest(conn net.Conn) {
+// SocketServer represents the server that handles incoming connections and stores the latest temperature records
+type SocketServer struct {
+	listener  net.Listener
+	dataMutex sync.Mutex
+	dataMap   map[uint32]DeviceData
+	lastSeen  map[uint32]time.Time
+}
+
+func NewServer() (*SocketServer, error) {
+	service := common.Config.GetString("socket_server.address") + ":" + common.Config.GetString("socket_server.port")
+	listener, err := net.Listen("tcp", service)
+	if err != nil {
+		return nil, err
+	}
+
+	server := &SocketServer{
+		listener: listener,
+		dataMap:  make(map[uint32]DeviceData),
+		lastSeen: make(map[uint32]time.Time),
+	}
+
+	go server.cleanupExpiredData()
+
+	return server, nil
+}
+
+func (s *SocketServer) Start() {
+	zap.S().Infoln("Socket_Reader Running:", s.listener.Addr())
+	for {
+		conn, err := s.listener.Accept()
+		if err != nil {
+			fmt.Println("Error accepting:", err.Error())
+			continue
+		}
+		go s.handleRequest(conn)
+	}
+}
+
+func (s *SocketServer) handleRequest(conn net.Conn) {
 	defer conn.Close()
 
 	for {
-		// Buffer to hold incoming data.
 		buf := make([]byte, 14)
 		_, err := conn.Read(buf)
 		if err != nil {
@@ -146,22 +181,18 @@ func handleRequest(conn net.Conn) {
 			return
 		}
 
-		// Parse the received data.
 		packet, err := NewDataPacket(buf)
 		if err != nil {
 			fmt.Println("Error parsing data packet:", err.Error())
 			continue
 		}
 
-		// Validate the received data.
 		valid := packet.Validate()
-
-		// Convert to DeviceData
 		deviceData := packet.ToDeviceData()
-		fmt.Printf("Received data: %+v\n", deviceData)
 
-		// Send response back to the client after 100ms.
-		time.Sleep(100 * time.Millisecond)
+		s.updateDataMap(deviceData)
+
+		//time.Sleep(100 * time.Millisecond)
 		response := NewResponsePacket(valid)
 		_, err = conn.Write(response.ToBytes())
 		if err != nil {
@@ -171,26 +202,28 @@ func handleRequest(conn net.Conn) {
 	}
 }
 
-func (sr *SocketReader) SocketStart() {
-	service := common.Config.GetString("socket_server.address") + ":" + common.Config.GetString("socket_server.port")
-	tcpAddr, err := net.ResolveTCPAddr("tcp4", service)
-	if err != nil {
-		zap.S().Errorln("Fatal error: %s", zap.Error(err))
-		os.Exit(1)
+func (s *SocketServer) updateDataMap(data DeviceData) {
+	s.dataMutex.Lock()
+	defer s.dataMutex.Unlock()
+
+	s.dataMap[data.DeviceID] = data
+	s.lastSeen[data.DeviceID] = time.Now()
+	if *common.TestMode {
+		fmt.Printf("Updated data map: %v\n", s.dataMap)
 	}
-	listener, err := net.ListenTCP("tcp", tcpAddr)
-	if err != nil {
-		zap.S().Errorln("Fatal error: %s", zap.Error(err))
-		os.Exit(1)
-	}
-	defer listener.Close()
-	zap.S().Infoln("Socket_Reader Running:", tcpAddr)
+}
+func (s *SocketServer) cleanupExpiredData() {
 	for {
-		conn, err := listener.AcceptTCP()
-		if err != nil {
-			log.Println(err)
-			continue
+		time.Sleep(1 * time.Minute)
+		s.dataMutex.Lock()
+		now := time.Now()
+		for deviceID, lastSeen := range s.lastSeen {
+			if now.Sub(lastSeen) > 1*time.Minute {
+				delete(s.dataMap, deviceID)
+				delete(s.lastSeen, deviceID)
+				fmt.Printf("Removed device %d due to inactivity\n", deviceID)
+			}
 		}
-		go handleRequest(conn)
+		s.dataMutex.Unlock()
 	}
 }
