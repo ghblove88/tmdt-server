@@ -5,13 +5,13 @@ import (
 	"TmdtServer/models"
 	_ "github.com/go-sql-driver/mysql"
 	"go.uber.org/zap"
-	"time"
 )
 
 var (
 	G_Operator_Info Operator_Info
-	G_Doctor_Info   Doctor_Info
 	G_Device_Info   Device_Info
+	G_BedService    *BedService
+	G_TempRecord    *TemperatureRecordService
 	G_Sound_Play    Sound_Play
 	G_UartGpio      UartGpio
 	G_SocketServer  *SocketServer
@@ -26,22 +26,29 @@ func (k *Runtime) Run() {
 
 	k.Init()
 
-	//启动实时运行器
-	RecordTimer.Start(10*time.Second, 1*time.Minute, k.RecordTemp)
-
 }
 
 func (k *Runtime) Init() {
 	zap.S().Infoln("Database Init......")
 
+	// Migrate the schema
+	//err = orm.AutoMigrate(&models.Bed{}, &models.DeviceInfo{}, &models.OperatorInfo{})
+	//if err != nil {
+	//	panic("failed to migrate the database schema")
+	//}
+
 	G_Operator_Info = Operator_Info{Operator: make(map[string]STRUCT_OPERATOR_INFO)}
 	G_Operator_Info.PullDB()
 
-	G_Doctor_Info = Doctor_Info{Doctor: make(map[string]models.DoctorInfo)}
-	G_Doctor_Info.PullDB()
-
 	G_Device_Info = Device_Info{Device: make(map[string]models.DeviceInfo)}
 	G_Device_Info.PullDB()
+
+	orm, err := models.NewOrm()
+	G_BedService, err = NewBedService(orm)
+	if err != nil {
+		panic("failed to create bed service")
+	}
+	G_TempRecord = NewTemperatureRecordService(orm)
 
 	G_UartGpio = UartGpio{}
 
@@ -51,7 +58,7 @@ func (k *Runtime) Init() {
 	G_Sound_Play.Run()
 
 	G_SocketServer, _ = NewServer()
-	G_SocketServer.Start()
+	go G_SocketServer.Start()
 
 	G_UartGpio.Run()
 }
@@ -71,8 +78,4 @@ func (k *Runtime) PlayStepVoice(nVoice_NO string, nStepName_voice []string, Oper
 	voice = append(voice, Operating)
 
 	G_Sound_Play.Add_Sound_Queue(voice)
-}
-
-func (k *Runtime) RecordTemp() {
-
 }

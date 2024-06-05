@@ -4,7 +4,6 @@ import (
 	adminDataV1 "TmdtServer/api/admin/V1"
 	apiDataV1 "TmdtServer/api/apiData/V1"
 	monitorV1 "TmdtServer/api/monitor/V1"
-	"TmdtServer/common"
 	"fmt"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
@@ -49,7 +48,6 @@ func Router() {
 
 	// 静态文件
 	r.Static("/bgStatic", "./bgStatic")
-	r.Static("/images", common.Config.GetString("ecds.detectionimages"))
 
 	// 创建基于cookie的存储引擎， 参数是用于加密的密钥
 	store := cookie.NewStore([]byte("5e59a3e7-2571-4f9b-81ca-1a7682af3aad"))
@@ -61,8 +59,8 @@ func Router() {
 	{
 
 		apiDataV1Group.GET("/operator", func(c *gin.Context) { apiDataV1.GetOperator(c) })
-		apiDataV1Group.GET("/doctor", func(c *gin.Context) { apiDataV1.GetDoctor(c) })
 		apiDataV1Group.GET("/device", func(c *gin.Context) { apiDataV1.GetDevice(c) })
+		apiDataV1Group.GET("/beds", func(c *gin.Context) { apiDataV1.GetBeds(c) })
 
 	}
 
@@ -73,18 +71,7 @@ func Router() {
 
 		apiAdminV1Group.POST("/login", func(c *gin.Context) { adminDataV1.Login(c) })
 		apiAdminV1Group.GET("/get-async-routes", func(c *gin.Context) { adminDataV1.GetAsyncRoutes(c) })
-		apiAdminV1Group.GET("/deviceType/list", func(c *gin.Context) { adminDataV1.GetDeviceTypeList(c) })
 		apiAdminV1Group.GET("/operator/list", func(c *gin.Context) { adminDataV1.GetOperatorList(c) })
-		apiAdminV1Group.GET("/doctor/list", func(c *gin.Context) { adminDataV1.GetDoctorList(c) })
-		apiAdminV1Group.GET("/ecm/list", func(c *gin.Context) { adminDataV1.GetEcmList(c) })
-
-		user := apiAdminV1Group.Group("/ant")
-		{
-			user.POST("/antList", func(c *gin.Context) { adminDataV1.QueryAntList(c) })
-			user.POST("/antStepList", func(c *gin.Context) { adminDataV1.QueryAntSteps(c) })
-			user.POST("/antUpdate", func(c *gin.Context) { adminDataV1.AntModify(c) })
-			user.POST("/AntBatchExport", func(c *gin.Context) { adminDataV1.AntBatchExport(c) })
-		}
 
 		daily := apiAdminV1Group.Group("/daily")
 		{
@@ -92,54 +79,10 @@ func Router() {
 			daily.POST("/deleteDevice", func(c *gin.Context) { adminDataV1.DeleteDevice(c) })
 			daily.POST("/updateDevice", func(c *gin.Context) { adminDataV1.ModifyDevice(c) })
 
-			daily.POST("/queryDeviceType", func(c *gin.Context) { adminDataV1.QueryDeviceTypeList(c) })
-			daily.POST("/deleteDeviceType", func(c *gin.Context) { adminDataV1.DeleteDeviceType(c) })
-			daily.POST("/updateDeviceType", func(c *gin.Context) { adminDataV1.ModifyDeviceType(c) })
-
-			daily.POST("/queryDoctor", func(c *gin.Context) { adminDataV1.QueryDoctorList(c) })
-			daily.POST("/deleteDoctor", func(c *gin.Context) { adminDataV1.DeleteDoctor(c) })
-			daily.POST("/updateDoctor", func(c *gin.Context) { adminDataV1.ModifyDoctor(c) })
-
 			daily.POST("/queryOperator", func(c *gin.Context) { adminDataV1.QueryOperatorList(c) })
 			daily.POST("/deleteOperator", func(c *gin.Context) { adminDataV1.DeleteOperator(c) })
 			daily.POST("/updateOperator", func(c *gin.Context) { adminDataV1.ModifyOperator(c) })
 
-			daily.POST("/queryTimePlan", func(c *gin.Context) { adminDataV1.QueryTimePlanList(c) })
-			daily.POST("/deleteTimePlan", func(c *gin.Context) { adminDataV1.DeleteTimePlan(c) })
-			daily.POST("/updateTmePlan", func(c *gin.Context) { adminDataV1.ModifyTimePlan(c) })
-
-			daily.POST("/getProgramSteps", func(c *gin.Context) { adminDataV1.GetProgramSteps(c) })
-			daily.POST("/queryProgram", func(c *gin.Context) { adminDataV1.GetProgramList(c) })
-			daily.POST("/deleteProgram", func(c *gin.Context) { adminDataV1.DeleteProgram(c) })
-			daily.POST("/updateProgram", func(c *gin.Context) { adminDataV1.ModifyProgram(c) })
-			daily.GET("/getStepList", func(c *gin.Context) { adminDataV1.GetStepList(c) })
-
-			daily.POST("/queryLiquidDeviceList", func(c *gin.Context) { adminDataV1.QueryLiquidDeviceList(c) })
-			daily.POST("/deleteLiquidDevice", func(c *gin.Context) { adminDataV1.DeleteLiquidDeviceList(c) })
-			daily.POST("/saveLiquidDevice", func(c *gin.Context) { adminDataV1.ModifyLiquidDeviceList(c) })
-			daily.POST("/queryLiquidDeviceRecordList", func(c *gin.Context) { adminDataV1.QueryLiquidDeviceRecordList(c) })
-			daily.POST("/saveLiquidDeviceRecord", func(c *gin.Context) { adminDataV1.ModifyLiquidDeviceRecord(c) })
-			daily.POST("/deleteLiquidDetection", func(c *gin.Context) { adminDataV1.DeleteLiquidDetection(c) })
-			daily.POST("/uploadDetectionImg", func(c *gin.Context) { adminDataV1.UploadDetectionImg(c) })
-			daily.POST("/getDetectionImagesList", func(c *gin.Context) { adminDataV1.GetDetectionImagesList(c) })
-			daily.POST("/deleteDetectionImages", func(c *gin.Context) { adminDataV1.DeleteDetectionImages(c) })
-			daily.POST("/detectionExport", func(c *gin.Context) { adminDataV1.DetectionExport(c) })
-		}
-
-		endoscope := apiAdminV1Group.Group("/endoscope")
-		{
-			endoscope.POST("/queryLeakDetectionList", func(c *gin.Context) { adminDataV1.QueryLeakDetectionList(c) })
-			endoscope.POST("/savePartsModify", func(c *gin.Context) { adminDataV1.ModifyPartsModify(c) })
-			endoscope.POST("/leakDetectionExport", func(c *gin.Context) { adminDataV1.LeakDetectionExport(c) })
-			endoscope.POST("/queryStorageList", func(c *gin.Context) { adminDataV1.GetStorageList(c) })
-			endoscope.POST("/queryStorageRecordList", func(c *gin.Context) { adminDataV1.GetStorageRecordList(c) })
-			endoscope.POST("/storageExport", func(c *gin.Context) { adminDataV1.StorageExport(c) })
-			endoscope.POST("/repairRecordExport", func(c *gin.Context) { adminDataV1.RepairRecordExport(c) })
-			endoscope.POST("/sendRepairModify", func(c *gin.Context) { adminDataV1.SendRepairModify(c) })
-			endoscope.POST("/completedRepairModify", func(c *gin.Context) { adminDataV1.CompletedRepairModify(c) })
-			endoscope.POST("/queryRepairDetailsList", func(c *gin.Context) { adminDataV1.QueryRepairDetailsList(c) })
-			endoscope.POST("/queryRepairRecordList", func(c *gin.Context) { adminDataV1.QueryRepairRecordList(c) })
-			endoscope.POST("/repairManagementExport", func(c *gin.Context) { adminDataV1.RepairManagementExport(c) })
 		}
 
 		system := apiAdminV1Group.Group("/system")
@@ -159,18 +102,6 @@ func Router() {
 			system.POST("/saveConfigurationFile", func(c *gin.Context) { adminDataV1.SaveConfigurationFile(c) })
 		}
 
-		dashboard := apiAdminV1Group.Group("/dashboard")
-		{
-			dashboard.POST("/getStatistics1", func(c *gin.Context) { adminDataV1.GetStatistics1(c) })
-			dashboard.POST("/getStatistics2", func(c *gin.Context) { adminDataV1.GetStatistics2(c) })
-			dashboard.POST("/getStatistics3", func(c *gin.Context) { adminDataV1.GetStatistics3(c) })
-			dashboard.POST("/getStatistics4", func(c *gin.Context) { adminDataV1.GetStatistics4(c) })
-
-			dashboard.GET("/getModule1", func(c *gin.Context) { adminDataV1.GetModule1(c) })
-			dashboard.POST("/getModule2", func(c *gin.Context) { adminDataV1.GetModule2(c) })
-			dashboard.POST("/getModule3", func(c *gin.Context) { adminDataV1.GetModule3(c) })
-			dashboard.POST("/getModule4", func(c *gin.Context) { adminDataV1.GetModule4(c) })
-		}
 	}
 
 	apiRunV1Group := r.Group("/run/v1")

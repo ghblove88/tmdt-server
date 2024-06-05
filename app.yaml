@@ -8,13 +8,8 @@ socket_server:
     address: 0.0.0.0
     port: 8866
 web_server:
-    address: 0.0.0.0
+    address: 127.0.0.1
     port: 8849
-equipment:
-    identity: ANT
-    #标识必须使用字母
-    #在同一系统多台洗消主机时,标识必须长度一致 ANTA,ANTB,ANTC
-
 tmdt:
     #通讯串口
     uart1: com1

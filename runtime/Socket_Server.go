@@ -29,6 +29,9 @@ type DataPacket struct {
 // DeviceData represents the structure to store device data
 type DeviceData struct {
 	DeviceID uint32
+	BedCode  string
+	Operator string
+	Patient  string
 	Temp1    float32
 	Temp2    float32
 	Temp3    float32
@@ -150,6 +153,7 @@ func NewServer() (*SocketServer, error) {
 	}
 
 	go server.cleanupExpiredData()
+	go server.saveDataToDB()
 
 	return server, nil
 }
@@ -206,12 +210,17 @@ func (s *SocketServer) updateDataMap(data DeviceData) {
 	s.dataMutex.Lock()
 	defer s.dataMutex.Unlock()
 
+	existingData, exists := s.DataMap[data.DeviceID]
+	if exists {
+		data.BedCode = existingData.BedCode
+		data.Operator = existingData.Operator
+		data.Patient = existingData.Patient
+	}
 	s.DataMap[data.DeviceID] = data
 	s.lastSeen[data.DeviceID] = time.Now()
-	if *common.TestMode {
-		fmt.Printf("Updated data map: %v\n", s.DataMap)
-	}
+	fmt.Printf("Updated data map: %v\n", s.DataMap)
 }
+
 func (s *SocketServer) cleanupExpiredData() {
 	for {
 		time.Sleep(1 * time.Minute)
@@ -226,4 +235,48 @@ func (s *SocketServer) cleanupExpiredData() {
 		}
 		s.dataMutex.Unlock()
 	}
+}
+func (s *SocketServer) saveDataToDB() {
+	for {
+		time.Sleep(1 * time.Minute)
+		s.dataMutex.Lock()
+		for _, data := range s.DataMap {
+			G_TempRecord.CreateTemperatureRecord(fmt.Sprintf("%d", data.DeviceID),
+				data.BedCode,
+				data.Operator,
+				data.Patient,
+				float64(data.Temp1),
+				float64(data.Temp2),
+				float64(data.Temp3),
+				time.Now())
+		}
+		s.dataMutex.Unlock()
+	}
+}
+func (s *SocketServer) SetDeviceInfo(deviceID uint32, bedCode, operator, patient string) {
+	s.dataMutex.Lock()
+	defer s.dataMutex.Unlock()
+
+	data, exists := s.DataMap[deviceID]
+	if !exists {
+		//data = DeviceData{
+		//	DeviceID: deviceID,
+		//	BedCode:  bedCode,
+		//	Operator: operator,
+		//	Patient:  patient,
+		//}
+		zap.S().Errorln("Device not found in data map", deviceID)
+	} else {
+		if bedCode != "" {
+			data.BedCode = bedCode
+		}
+		if operator != "" {
+			data.Operator = operator
+		}
+		if patient != "" {
+			data.Patient = patient
+		}
+	}
+
+	s.DataMap[deviceID] = data
 }

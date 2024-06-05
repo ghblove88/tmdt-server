@@ -34,12 +34,12 @@ func (oi *Device_Info) PullDB() (res bool) {
 	}
 
 	for i, v := range device {
-		oi.Device[v.EndoscopeNumber] = models.DeviceInfo{v.Id, v.EndoscopeNumber,
-			v.EndoscopeType,
-			v.EndoscopeInfo,
-			v.Status}
-		oi.Device_Queue = append(oi.Device_Queue, models.DeviceInfo{Id: i + 1, EndoscopeNumber: v.EndoscopeNumber,
-			EndoscopeType: v.EndoscopeType, EndoscopeInfo: v.EndoscopeInfo, Status: v.Status})
+		oi.Device[v.DeviceCode] = models.DeviceInfo{v.ID, v.DeviceCode,
+			v.DeviceSequence,
+			v.DeviceName,
+			v.DeviceInfo}
+		oi.Device_Queue = append(oi.Device_Queue, models.DeviceInfo{ID: uint(i + 1), DeviceCode: v.DeviceCode,
+			DeviceSequence: v.DeviceSequence, DeviceName: v.DeviceName, DeviceInfo: v.DeviceInfo})
 	}
 	return true
 }
