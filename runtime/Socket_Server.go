@@ -28,13 +28,14 @@ type DataPacket struct {
 
 // DeviceData represents the structure to store device data
 type DeviceData struct {
-	DeviceID uint32
-	BedCode  string
-	Operator string
-	Patient  string
-	Temp1    float32
-	Temp2    float32
-	Temp3    float32
+	DeviceID       uint32
+	BedCode        string
+	Operator       string
+	Patient        string
+	Temp1          float32
+	Temp2          float32
+	Temp3          float32
+	CollectionTime time.Time
 }
 
 // NewDataPacket creates a new DataPacket from a byte slice
@@ -75,10 +76,11 @@ func (p *DataPacket) ToDeviceData() DeviceData {
 	temp2 := float32(int(p.Temp2High)<<8|int(p.Temp2Low)) / 10.0
 	temp3 := float32(int(p.Temp3High)<<8|int(p.Temp3Low)) / 10.0
 	return DeviceData{
-		DeviceID: deviceID,
-		Temp1:    temp1,
-		Temp2:    temp2,
-		Temp3:    temp3,
+		DeviceID:       deviceID,
+		Temp1:          temp1,
+		Temp2:          temp2,
+		Temp3:          temp3,
+		CollectionTime: time.Now(),
 	}
 }
 
@@ -134,9 +136,10 @@ func (p *ResponsePacket) ToBytes() []byte {
 // SocketServer represents the server that handles incoming connections and stores the latest temperature records
 type SocketServer struct {
 	listener  net.Listener
-	dataMutex sync.Mutex
+	DataMutex sync.Mutex
 	DataMap   map[uint32]DeviceData
 	lastSeen  map[uint32]time.Time
+	Tqm       *TemperatureQueueManager
 }
 
 func NewServer() (*SocketServer, error) {
@@ -151,6 +154,8 @@ func NewServer() (*SocketServer, error) {
 		DataMap:  make(map[uint32]DeviceData),
 		lastSeen: make(map[uint32]time.Time),
 	}
+	server.Tqm = NewTemperatureQueueManager(180, &server.DataMap, &server.DataMutex)
+	server.Tqm.Start()
 
 	go server.cleanupExpiredData()
 	go server.saveDataToDB()
@@ -207,8 +212,8 @@ func (s *SocketServer) handleRequest(conn net.Conn) {
 }
 
 func (s *SocketServer) updateDataMap(data DeviceData) {
-	s.dataMutex.Lock()
-	defer s.dataMutex.Unlock()
+	s.DataMutex.Lock()
+	defer s.DataMutex.Unlock()
 
 	existingData, exists := s.DataMap[data.DeviceID]
 	if exists {
@@ -216,30 +221,35 @@ func (s *SocketServer) updateDataMap(data DeviceData) {
 		data.Operator = existingData.Operator
 		data.Patient = existingData.Patient
 	}
+	data.CollectionTime = time.Now()
 	s.DataMap[data.DeviceID] = data
 	s.lastSeen[data.DeviceID] = time.Now()
-	fmt.Printf("Updated data map: %v\n", s.DataMap)
+	if *common.TestMode {
+		//fmt.Printf("Updated data map: %v\n", s.DataMap)
+	}
 }
 
 func (s *SocketServer) cleanupExpiredData() {
 	for {
 		time.Sleep(1 * time.Minute)
-		s.dataMutex.Lock()
+		s.DataMutex.Lock()
 		now := time.Now()
 		for deviceID, lastSeen := range s.lastSeen {
 			if now.Sub(lastSeen) > 1*time.Minute {
 				delete(s.DataMap, deviceID)
 				delete(s.lastSeen, deviceID)
-				fmt.Printf("Removed device %d due to inactivity\n", deviceID)
+				if *common.TestMode {
+					//fmt.Printf("Removed device %d due to inactivity\n", deviceID)
+				}
 			}
 		}
-		s.dataMutex.Unlock()
+		s.DataMutex.Unlock()
 	}
 }
 func (s *SocketServer) saveDataToDB() {
 	for {
 		time.Sleep(1 * time.Minute)
-		s.dataMutex.Lock()
+		s.DataMutex.Lock()
 		for _, data := range s.DataMap {
 			G_TempRecord.CreateTemperatureRecord(fmt.Sprintf("%d", data.DeviceID),
 				data.BedCode,
@@ -248,14 +258,14 @@ func (s *SocketServer) saveDataToDB() {
 				float64(data.Temp1),
 				float64(data.Temp2),
 				float64(data.Temp3),
-				time.Now())
+				data.CollectionTime)
 		}
-		s.dataMutex.Unlock()
+		s.DataMutex.Unlock()
 	}
 }
 func (s *SocketServer) SetDeviceInfo(deviceID uint32, bedCode, operator, patient string) {
-	s.dataMutex.Lock()
-	defer s.dataMutex.Unlock()
+	s.DataMutex.Lock()
+	defer s.DataMutex.Unlock()
 
 	data, exists := s.DataMap[deviceID]
 	if !exists {

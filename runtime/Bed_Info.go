@@ -16,7 +16,7 @@ type Bed struct {
 // BedService provides methods to operate on the bed table.
 type BedService struct {
 	db    *gorm.DB
-	cache map[uint]*Bed
+	cache map[uint]Bed
 	mutex sync.RWMutex
 }
 
@@ -24,7 +24,7 @@ type BedService struct {
 func NewBedService(db *gorm.DB) (*BedService, error) {
 	bedService := &BedService{
 		db:    db,
-		cache: make(map[uint]*Bed),
+		cache: make(map[uint]Bed),
 	}
 	if err := bedService.loadCache(); err != nil {
 		return nil, err
@@ -41,16 +41,16 @@ func (s *BedService) loadCache() error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	for _, bed := range beds {
-		s.cache[bed.ID] = &bed
+		s.cache[bed.ID] = bed
 	}
 	return nil
 }
 
 // CreateBed adds a new bed record to the database and updates the cache.
-func (s *BedService) CreateBed(bedCode, bedInfo string) (*Bed, error) {
-	bed := &Bed{BedCode: bedCode, BedInfo: bedInfo}
+func (s *BedService) CreateBed(bedCode, bedInfo string) (Bed, error) {
+	bed := Bed{BedCode: bedCode, BedInfo: bedInfo}
 	if err := s.db.Create(bed).Error; err != nil {
-		return nil, err
+		return Bed{BedCode: "", BedInfo: ""}, err
 	}
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
@@ -59,15 +59,15 @@ func (s *BedService) CreateBed(bedCode, bedInfo string) (*Bed, error) {
 }
 
 // UpdateBed updates an existing bed record in the database and the cache.
-func (s *BedService) UpdateBed(id uint, bedCode, bedInfo string) (*Bed, error) {
-	bed := &Bed{}
+func (s *BedService) UpdateBed(id uint, bedCode, bedInfo string) (Bed, error) {
+	bed := Bed{}
 	if err := s.db.First(bed, id).Error; err != nil {
-		return nil, err
+		return Bed{BedCode: "", BedInfo: ""}, err
 	}
 	bed.BedCode = bedCode
 	bed.BedInfo = bedInfo
 	if err := s.db.Save(bed).Error; err != nil {
-		return nil, err
+		return Bed{BedCode: "", BedInfo: ""}, err
 	}
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
@@ -87,13 +87,13 @@ func (s *BedService) DeleteBed(id uint) error {
 }
 
 // GetBed retrieves a bed record from the cache.
-func (s *BedService) GetBed(id uint) (*Bed, error) {
+func (s *BedService) GetBed(id uint) (Bed, error) {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 	if bed, exists := s.cache[id]; exists {
 		return bed, nil
 	}
-	return nil, fmt.Errorf("bed with ID %d not found", id)
+	return Bed{BedCode: "", BedInfo: ""}, fmt.Errorf("bed with ID %d not found", id)
 }
 
 // GetAllBeds retrieves all bed records from the cache.
@@ -102,7 +102,7 @@ func (s *BedService) GetAllBeds() ([]Bed, error) {
 	defer s.mutex.RUnlock()
 	beds := make([]Bed, 0, len(s.cache))
 	for _, bed := range s.cache {
-		beds = append(beds, *bed)
+		beds = append(beds, bed)
 	}
 	return beds, nil
 }

@@ -73,11 +73,25 @@ func Router() {
 		apiAdminV1Group.GET("/get-async-routes", func(c *gin.Context) { adminDataV1.GetAsyncRoutes(c) })
 		apiAdminV1Group.GET("/operator/list", func(c *gin.Context) { adminDataV1.GetOperatorList(c) })
 
+		data := apiAdminV1Group.Group("/data")
+		{
+			data.POST("/queryDataList", func(c *gin.Context) { adminDataV1.QueryDataList(c) })
+			data.POST("/getOperatorList", func(c *gin.Context) { adminDataV1.GetOperatorList(c) })
+			data.POST("/getBedsList", func(c *gin.Context) { adminDataV1.GetBedsList(c) })
+			data.POST("/exportDataBatch", func(c *gin.Context) { adminDataV1.ExportDataBatch(c) })
+
+		}
+
 		daily := apiAdminV1Group.Group("/daily")
 		{
 			daily.POST("/queryDevice", func(c *gin.Context) { adminDataV1.QueryDeviceList(c) })
 			daily.POST("/deleteDevice", func(c *gin.Context) { adminDataV1.DeleteDevice(c) })
 			daily.POST("/updateDevice", func(c *gin.Context) { adminDataV1.ModifyDevice(c) })
+			daily.POST("/queryDeviceCodes", func(c *gin.Context) { adminDataV1.QueryDeviceCode(c) })
+
+			daily.POST("/queryBeds", func(c *gin.Context) { adminDataV1.QueryBedsList(c) })
+			daily.POST("/deleteBeds", func(c *gin.Context) { adminDataV1.DeleteBed(c) })
+			daily.POST("/updateBeds", func(c *gin.Context) { adminDataV1.ModifyBed(c) })
 
 			daily.POST("/queryOperator", func(c *gin.Context) { adminDataV1.QueryOperatorList(c) })
 			daily.POST("/deleteOperator", func(c *gin.Context) { adminDataV1.DeleteOperator(c) })
