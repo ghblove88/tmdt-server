@@ -170,3 +170,24 @@ func GetBedsList(ginC *gin.Context) {
 	rows, _ := runtime.G_BedService.GetAllBeds()
 	ginC.JSON(http.StatusOK, gin.H{"success": true, "data": rows})
 }
+
+func GetDeviceList(ginC *gin.Context) {
+	rows := runtime.G_Device_Info.GetAll()
+	ginC.JSON(http.StatusOK, gin.H{"success": true, "data": rows})
+}
+
+func GetTempDataList(ginC *gin.Context) {
+	var post map[string]interface{}
+	err := ginC.BindJSON(&post)
+	if err != nil {
+		ginC.JSON(http.StatusOK, gin.H{"success": false, "data": "参数错误"})
+		return
+	}
+	code, err := strconv.Atoi(post["device_code"].(string))
+	if err != nil {
+		ginC.JSON(http.StatusOK, gin.H{"success": false, "data": "参数错误"})
+		return
+	}
+	rows := runtime.G_SocketServer.DataMap[uint32(code)]
+	ginC.JSON(http.StatusOK, gin.H{"success": true, "data": rows})
+}

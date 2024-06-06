@@ -28,7 +28,7 @@ func (oi *Device_Info) PullDB() (res bool) {
 	}
 
 	var device []models.DeviceInfo
-	db := engine.Where("id >?", 0).Order("id").Find(&device)
+	db := engine.Where("id >?", 0).Order("device_sequence").Find(&device)
 	if db.Error != nil {
 		return
 	}

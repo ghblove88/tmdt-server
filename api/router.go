@@ -80,6 +80,9 @@ func Router() {
 			data.POST("/getBedsList", func(c *gin.Context) { adminDataV1.GetBedsList(c) })
 			data.POST("/exportDataBatch", func(c *gin.Context) { adminDataV1.ExportDataBatch(c) })
 
+			data.POST("/getDeviceList", func(c *gin.Context) { adminDataV1.GetDeviceList(c) })
+			data.POST("/getTempDataList", func(c *gin.Context) { adminDataV1.GetTempDataList(c) })
+
 		}
 
 		daily := apiAdminV1Group.Group("/daily")

@@ -36,8 +36,8 @@ func (tq *TemperatureQueue) Add(data DeviceData) {
 
 // TemperatureQueueManager manages multiple TemperatureQueues
 type TemperatureQueueManager struct {
-	queues      map[uint32]*TemperatureQueue
-	queueLength int
+	Queues      map[uint32]*TemperatureQueue
+	QueueLength int
 	dataMap     *map[uint32]DeviceData
 	dataMutex   *sync.Mutex
 }
@@ -45,14 +45,14 @@ type TemperatureQueueManager struct {
 // NewTemperatureQueueManager creates a new TemperatureQueueManager
 func NewTemperatureQueueManager(queueLength int, dataMap *map[uint32]DeviceData, dataMutex *sync.Mutex) *TemperatureQueueManager {
 	return &TemperatureQueueManager{
-		queues:      make(map[uint32]*TemperatureQueue),
-		queueLength: queueLength,
+		Queues:      make(map[uint32]*TemperatureQueue),
+		QueueLength: queueLength,
 		dataMap:     dataMap,
 		dataMutex:   dataMutex,
 	}
 }
 
-// Start periodically stores data from the Server's dataMap into queues
+// Start periodically stores data from the Server's dataMap into Queues
 func (tqm *TemperatureQueueManager) Start() {
 	go func() {
 		for {
@@ -67,10 +67,10 @@ func (tqm *TemperatureQueueManager) storeData() {
 	defer tqm.dataMutex.Unlock()
 
 	for deviceID, data := range *tqm.dataMap {
-		queue, exists := tqm.queues[deviceID]
+		queue, exists := tqm.Queues[deviceID]
 		if !exists {
-			queue = NewTemperatureQueue(tqm.queueLength)
-			tqm.queues[deviceID] = queue
+			queue = NewTemperatureQueue(tqm.QueueLength)
+			tqm.Queues[deviceID] = queue
 		}
 		queue.Add(data)
 		if *common.TestMode {
