@@ -46,7 +46,11 @@ func sendData(conn net.Conn) {
 			fmt.Println("Error sending data:", err.Error())
 			return
 		}
-
+		// 打印字节数组为16进制格式，每个字节用空格分隔
+		for _, b := range packet {
+			fmt.Printf("%02x ", b)
+		}
+		fmt.Printf("\n")
 		fmt.Printf("Sent packet: DeviceID=%d, Temp1=%.1f, Temp2=%.1f, Temp3=%.1f\n",
 			deviceID, temp1, temp2, temp3)
 	}
