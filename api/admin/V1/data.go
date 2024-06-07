@@ -6,6 +6,7 @@ import (
 	"TmdtServer/runtime"
 	"github.com/gin-gonic/gin"
 	"github.com/xuri/excelize/v2"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -190,4 +191,29 @@ func GetTempDataList(ginC *gin.Context) {
 	}
 	rows := runtime.G_SocketServer.DataMap[uint32(code)]
 	ginC.JSON(http.StatusOK, gin.H{"success": true, "data": rows})
+}
+
+type ModifyDeviceInfoStruct struct {
+	DeviceCode string `json:"device_code"`
+	BedCode    string `json:"bed_code"`
+	Operator   string `json:"operator"`
+	Patient    string `json:"patient"`
+}
+
+func ModifyDeviceInfo(ginC *gin.Context) {
+	var dlc ModifyDeviceInfoStruct
+	err := ginC.ShouldBind(&dlc)
+	log.Print(dlc)
+	if err != nil {
+		ginC.JSON(http.StatusOK, gin.H{"success": false, "msg": "参数错误"})
+		return
+	}
+	code, err := strconv.Atoi(dlc.DeviceCode)
+	if err != nil {
+		ginC.JSON(http.StatusOK, gin.H{"success": false, "msg": "参数错误"})
+	}
+
+	runtime.G_SocketServer.SetDeviceInfo(uint32(code), dlc.BedCode, dlc.Operator, dlc.Patient)
+
+	ginC.JSON(http.StatusOK, gin.H{"success": true, "msg": "操作成功"})
 }

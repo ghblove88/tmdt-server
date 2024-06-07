@@ -31,7 +31,7 @@ func main() {
 
 func sendData(conn net.Conn) {
 	// Create and send data packets every 2 seconds
-	ticker := time.NewTicker(2 * time.Second)
+	ticker := time.NewTicker(500 * time.Millisecond)
 	defer ticker.Stop()
 
 	for range ticker.C {

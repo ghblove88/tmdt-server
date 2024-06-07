@@ -277,15 +277,9 @@ func (s *SocketServer) SetDeviceInfo(deviceID uint32, bedCode, operator, patient
 		//}
 		zap.S().Errorln("Device not found in data map", deviceID)
 	} else {
-		if bedCode != "" {
-			data.BedCode = bedCode
-		}
-		if operator != "" {
-			data.Operator = operator
-		}
-		if patient != "" {
-			data.Patient = patient
-		}
+		data.BedCode = bedCode
+		data.Operator = operator
+		data.Patient = patient
 	}
 
 	s.DataMap[deviceID] = data
