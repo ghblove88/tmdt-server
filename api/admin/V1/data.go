@@ -4,6 +4,7 @@ import (
 	"TmdtServer/common"
 	"TmdtServer/models"
 	"TmdtServer/runtime"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/xuri/excelize/v2"
 	"log"
@@ -216,4 +217,46 @@ func ModifyDeviceInfo(ginC *gin.Context) {
 	runtime.G_SocketServer.SetDeviceInfo(uint32(code), dlc.BedCode, dlc.Operator, dlc.Patient)
 
 	ginC.JSON(http.StatusOK, gin.H{"success": true, "msg": "操作成功"})
+}
+
+type HistoricalDataStruct struct {
+	DeviceCode string `json:"device_code"`
+	Hours      int    `json:"hours"`
+}
+
+func GetHistoricalDataList(ginC *gin.Context) {
+	var hds HistoricalDataStruct
+	err := ginC.ShouldBind(&hds)
+
+	if err != nil {
+		ginC.JSON(http.StatusOK, gin.H{"success": false, "msg": "参数错误"})
+		return
+	}
+	currentTime, pastTime := getTimes(hds.Hours)
+	currentTime = currentTime.In(time.Local)
+	pastTime = pastTime.In(time.Local)
+
+	query := fmt.Sprintf("SELECT * FROM temperature_record WHERE record_time BETWEEN '%s' AND '%s' AND device_code='%s'",
+		pastTime.Format("2006-01-02 15:04:05"), currentTime.Format("2006-01-02 15:04:05"), hds.DeviceCode)
+
+	orm, err := models.NewOrm()
+	if err != nil {
+		return
+	}
+	var rows []map[string]interface{}
+	db := orm.Raw(query).Scan(&rows)
+	if db.Error != nil {
+		ginC.JSON(http.StatusOK, gin.H{"success": false, "msg": db.Error})
+		return
+	}
+	ginC.JSON(http.StatusOK, gin.H{"success": true, "msg": "操作成功", "data": rows})
+}
+
+// 函数返回当前时间与当前时间减去指定小时数的时间
+func getTimes(hours int) (time.Time, time.Time) {
+	// 获取当前时间
+	currentTime := time.Now()
+	// 减去指定小时数
+	pastTime := currentTime.Add(-time.Duration(hours) * time.Hour)
+	return currentTime, pastTime
 }
