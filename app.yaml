@@ -1,5 +1,5 @@
 DbServer:
-    address: ecds.doneax.com
+    address: 120.79.34.12
     port: 3306
     username: root
     password: AntMysql2015
