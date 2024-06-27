@@ -84,7 +84,7 @@ func createDataPacket(deviceID uint32, temp1, temp2, temp3 float32) []byte {
 
 	checksum := calculateChecksum(data)
 	data = append(data, checksum)
-
+	//data = []byte{0x5a, 0xA5, 0x81, 0x00, 0x00, 0x03, 0xEB,0x01, 0x72, 0x01, 0x74, 0x01, 0x6E, 0xc5}
 	return data
 }
 
